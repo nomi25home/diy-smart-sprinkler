@@ -20,6 +20,16 @@ This project turns a Raspberry Pi 2 running Raspberry Pi OS Bookworm into a loca
 - Per-zone runtime display
 - Safety logic: only one zone is enabled at a time
 
+## Screenshots
+
+### Web View
+
+![Web dashboard](docs/screenshots/web-view.png)
+
+### Phone View
+
+![Phone dashboard](docs/screenshots/phone-view.png)
+
 ## Hardware Used
 
 This build was tested with:
