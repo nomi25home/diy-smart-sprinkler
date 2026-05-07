@@ -1,41 +1,93 @@
-- alias: Sprinkler AM PM Schedule
-  description: ""
+- id: '1778010341339'
+  alias: Sprinkler AM PM Schedule
+  description: ''
   triggers:
-    - trigger: time
-      at: "05:30:00"
-    - trigger: time
-      at: "17:30:00"
+  - trigger: time
+    at: 05:30:00
+  - trigger: time
+    at: '17:30:00'
   conditions:
+  - condition: state
+    entity_id: input_boolean.sprinkler_rain_skip
+    state: 'off'
+  - condition: state
+    entity_id: binary_sensor.smart_rain_skip
+    state: 'off'
+  actions:
+  - action: script.sprinkler_run_all_zones
+  mode: single
+- id: '1778097020206'
+  alias: Sprinkler Safety Shutoff After 40 Minutes
+  description: ''
+  triggers:
+  - entity_id:
+    - sensor.sprinkler_zone_1_state
+    - sensor.sprinkler_zone_2_state
+    - sensor.sprinkler_zone_3_state
+    - sensor.sprinkler_zone_4_state
+    - sensor.sprinkler_zone_5_state
+    - sensor.sprinkler_zone_6_state
+    to: 'True'
+    for:
+      minutes: 40
+    trigger: state
+  actions:
+  - action: rest_command.sprinkler_all_off
+  - action: persistent_notification.create
+    data:
+      title: Sprinkler safety shutoff
+      message: 'A sprinkler zone was running for more than 20 minutes and was shut
+        off. Please inspect the sprinkler automation, relay, and valve wiring.
+
+        '
+  mode: single
+- id: '1778097767882'
+  alias: Enable Rain Skip When Raining
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id: weather.home
+    to: rainy
+  conditions: []
+  actions:
+  - action: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.sprinkler_rain_skip
+  mode: single
+- id: '1778097780484'
+  alias: Reset Rain Skip Daily
+  description: ''
+  triggers:
+  - trigger: time
+    at: 03:00:00
+  actions:
+  - action: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.sprinkler_rain_skip
+  mode: single
+- id: '1778173416281'
+  alias: Sprinkler Notify Schedule Skipped
+  description: ''
+  triggers:
+  - trigger: time
+    at: 05:30:00
+  - trigger: time
+    at: '17:30:00'
+  conditions:
+  - condition: or
+    conditions:
     - condition: state
       entity_id: input_boolean.sprinkler_rain_skip
-      state: "off"
+      state: 'on'
     - condition: state
       entity_id: binary_sensor.smart_rain_skip
-      state: "off"
+      state: 'on'
   actions:
-    - action: script.sprinkler_run_all_zones
-  mode: single
+  - action: persistent_notification.create
+    data:
+      title: Sprinkler skipped
+      message: 'Scheduled sprinkler run was skipped. Manual rain skip: {{ states(''input_boolean.sprinkler_rain_skip'')
+        }}. Smart rain skip: {{ states(''binary_sensor.smart_rain_skip'') }}.
 
-- alias: Sprinkler Safety Shutoff After 20 Minutes
-  description: ""
-  triggers:
-    - trigger: state
-      entity_id:
-        - sensor.sprinkler_zone_1_state
-        - sensor.sprinkler_zone_2_state
-        - sensor.sprinkler_zone_3_state
-        - sensor.sprinkler_zone_4_state
-        - sensor.sprinkler_zone_5_state
-        - sensor.sprinkler_zone_6_state
-      to: "True"
-      for:
-        minutes: 20
-  actions:
-    - action: rest_command.sprinkler_all_off
-    - action: persistent_notification.create
-      data:
-        title: Sprinkler safety shutoff
-        message: >
-          A sprinkler zone was running for more than 20 minutes and was shut off.
-          Please inspect the sprinkler automation, relay, and valve wiring.
+        '
   mode: single
