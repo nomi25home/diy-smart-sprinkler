@@ -322,6 +322,8 @@ diy-smart-sprinkler/
 └── docs/
     ├── wiring.md
     └── screenshots/
+        ├── phone-view.png
+        └── web-view.png
 ```
 
 ## License
