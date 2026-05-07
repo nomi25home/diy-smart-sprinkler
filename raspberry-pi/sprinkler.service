@@ -1,0 +1,12 @@
+[Unit]
+Description=Sprinkler GPIO API
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /root/sprinkler/server.py
+WorkingDirectory=/root/sprinkler
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,103 @@
+- binary_sensor:
+    - name: Smart Rain Skip
+      state: >
+        {% set forecast = state_attr('weather.home', 'forecast') %}
+        {% set will_rain = forecast and (
+          forecast[0].condition == 'rainy' or
+          forecast[0].precipitation is defined and forecast[0].precipitation > 0.1
+        ) %}
+        {% set current = states('weather.home') == 'rainy' %}
+        {{ current or will_rain }}
+
+- sensor:
+    - name: Sprinkler Last Ran
+      unique_id: sprinkler_last_ran_display
+      icon: mdi:history
+      state: >
+        {% set t = states('input_datetime.sprinkler_last_run') %}
+        {% if t in ['unknown', 'unavailable', '', 'none'] %}
+          Never
+        {% else %}
+          {{ as_timestamp(t) | timestamp_custom('%a %b %d, %I:%M %p') }}
+        {% endif %}
+
+    - name: Sprinkler Next Run
+      unique_id: sprinkler_next_run_display
+      icon: mdi:calendar-clock
+      state: >
+        {% if is_state('input_boolean.sprinkler_rain_skip', 'on') %}
+          Skipped: Manual Rain Skip
+        {% elif is_state('binary_sensor.smart_rain_skip', 'on') %}
+          Skipped: Rain Expected
+        {% else %}
+          {% set now_ts = now().timestamp() %}
+          {% set today_530 = today_at('05:30').timestamp() %}
+          {% set today_1730 = today_at('17:30').timestamp() %}
+
+          {% if now_ts < today_530 %}
+            {{ today_at('05:30') | as_timestamp | timestamp_custom('%a %b %d, %I:%M %p') }}
+          {% elif now_ts < today_1730 %}
+            {{ today_at('17:30') | as_timestamp | timestamp_custom('%a %b %d, %I:%M %p') }}
+          {% else %}
+            {{ (today_at('05:30') + timedelta(days=1)) | as_timestamp | timestamp_custom('%a %b %d, %I:%M %p') }}
+          {% endif %}
+        {% endif %}
+
+    - name: Sprinkler Adjusted Runtime
+      unit_of_measurement: "min"
+      icon: mdi:timer-cog
+      state: >
+        {% set base = 20 %}
+        {% set temp = state_attr('weather.home', 'temperature') | float(75) %}
+        {% set condition = states('weather.home') %}
+
+        {% set runtime =
+          base
+          + (5 if temp >= 85 else 0)
+          + (5 if temp >= 95 else 0)
+          - (5 if temp <= 65 else 0)
+          - (10 if condition in ['rainy', 'pouring', 'lightning-rainy'] else 0)
+        %}
+
+        {{ [5, [runtime, 30] | min] | max }}
+
+    - name: Sprinkler Active Zone
+      icon: mdi:sprinkler
+      state: >
+        {% set active = namespace(zone='Idle') %}
+        {% for i in range(1, 7) %}
+          {% if is_state('sensor.sprinkler_zone_' ~ i ~ '_state', 'True') or is_state('sensor.sprinkler_zone_' ~ i ~ '_state', 'true') %}
+            {% set active.zone = 'Zone ' ~ i %}
+          {% endif %}
+        {% endfor %}
+        {{ active.zone }}
+
+    - name: Zone 1 Runtime Minutes
+      unique_id: zone_1_runtime_minutes
+      state: "{{ (states('sensor.sprinkler_zone_1_runtime_today') | float(0) * 60) | round(0) }}"
+      unit_of_measurement: "min"
+
+    - name: Zone 2 Runtime Minutes
+      unique_id: zone_2_runtime_minutes
+      state: "{{ (states('sensor.sprinkler_zone_2_runtime_today') | float(0) * 60) | round(0) }}"
+      unit_of_measurement: "min"
+
+    - name: Zone 3 Runtime Minutes
+      unique_id: zone_3_runtime_minutes
+      state: "{{ (states('sensor.sprinkler_zone_3_runtime_today') | float(0) * 60) | round(0) }}"
+      unit_of_measurement: "min"
+
+    - name: Zone 4 Runtime Minutes
+      unique_id: zone_4_runtime_minutes
+      state: "{{ (states('sensor.sprinkler_zone_4_runtime_today') | float(0) * 60) | round(0) }}"
+      unit_of_measurement: "min"
+
+    - name: Zone 5 Runtime Minutes
+      unique_id: zone_5_runtime_minutes
+      state: "{{ (states('sensor.sprinkler_zone_5_runtime_today') | float(0) * 60) | round(0) }}"
+      unit_of_measurement: "min"
+
+    - name: Zone 6 Runtime Minutes
+      unique_id: zone_6_runtime_minutes
+      state: "{{ (states('sensor.sprinkler_zone_6_runtime_today') | float(0) * 60) | round(0) }}"
+      unit_of_measurement: "min"

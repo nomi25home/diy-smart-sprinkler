@@ -1,0 +1,83 @@
+- platform: rest
+  name: Sprinkler Zone 1 State
+  resource: http://<PI_IP_ADDRESS>:5050/zone/1
+  value_template: "{{ value_json.on }}"
+  scan_interval: 2
+
+- platform: rest
+  name: Sprinkler Zone 2 State
+  resource: http://<PI_IP_ADDRESS>:5050/zone/2
+  value_template: "{{ value_json.on }}"
+  scan_interval: 2
+
+- platform: rest
+  name: Sprinkler Zone 3 State
+  resource: http://<PI_IP_ADDRESS>:5050/zone/3
+  value_template: "{{ value_json.on }}"
+  scan_interval: 2
+
+- platform: rest
+  name: Sprinkler Zone 4 State
+  resource: http://<PI_IP_ADDRESS>:5050/zone/4
+  value_template: "{{ value_json.on }}"
+  scan_interval: 2
+
+- platform: rest
+  name: Sprinkler Zone 5 State
+  resource: http://<PI_IP_ADDRESS>:5050/zone/5
+  value_template: "{{ value_json.on }}"
+  scan_interval: 2
+
+- platform: rest
+  name: Sprinkler Zone 6 State
+  resource: http://<PI_IP_ADDRESS>:5050/zone/6
+  value_template: "{{ value_json.on }}"
+  scan_interval: 2
+
+- platform: history_stats
+  name: Sprinkler Zone 1 Runtime Today
+  entity_id: sensor.sprinkler_zone_1_state
+  state: "True"
+  type: time
+  start: "{{ now().replace(hour=0, minute=0, second=0) }}"
+  end: "{{ now() }}"
+
+- platform: history_stats
+  name: Sprinkler Zone 2 Runtime Today
+  entity_id: sensor.sprinkler_zone_2_state
+  state: "True"
+  type: time
+  start: "{{ now().replace(hour=0, minute=0, second=0) }}"
+  end: "{{ now() }}"
+
+- platform: history_stats
+  name: Sprinkler Zone 3 Runtime Today
+  entity_id: sensor.sprinkler_zone_3_state
+  state: "True"
+  type: time
+  start: "{{ now().replace(hour=0, minute=0, second=0) }}"
+  end: "{{ now() }}"
+
+- platform: history_stats
+  name: Sprinkler Zone 4 Runtime Today
+  entity_id: sensor.sprinkler_zone_4_state
+  state: "True"
+  type: time
+  start: "{{ now().replace(hour=0, minute=0, second=0) }}"
+  end: "{{ now() }}"
+
+- platform: history_stats
+  name: Sprinkler Zone 5 Runtime Today
+  entity_id: sensor.sprinkler_zone_5_state
+  state: "True"
+  type: time
+  start: "{{ now().replace(hour=0, minute=0, second=0) }}"
+  end: "{{ now() }}"
+
+- platform: history_stats
+  name: Sprinkler Zone 6 Runtime Today
+  entity_id: sensor.sprinkler_zone_6_state
+  state: "True"
+  type: time
+  start: "{{ now().replace(hour=0, minute=0, second=0) }}"
+  end: "{{ now() }}"

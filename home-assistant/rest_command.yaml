@@ -1,0 +1,63 @@
+sprinkler_zone_1_on:
+  url: "http://<PI_IP_ADDRESS>:5050/zone/1"
+  method: POST
+  payload: "on"
+
+sprinkler_zone_1_off:
+  url: "http://<PI_IP_ADDRESS>:5050/zone/1"
+  method: POST
+  payload: "off"
+
+sprinkler_zone_2_on:
+  url: "http://<PI_IP_ADDRESS>:5050/zone/2"
+  method: POST
+  payload: "on"
+
+sprinkler_zone_2_off:
+  url: "http://<PI_IP_ADDRESS>:5050/zone/2"
+  method: POST
+  payload: "off"
+
+sprinkler_zone_3_on:
+  url: "http://<PI_IP_ADDRESS>:5050/zone/3"
+  method: POST
+  payload: "on"
+
+sprinkler_zone_3_off:
+  url: "http://<PI_IP_ADDRESS>:5050/zone/3"
+  method: POST
+  payload: "off"
+
+sprinkler_zone_4_on:
+  url: "http://<PI_IP_ADDRESS>:5050/zone/4"
+  method: POST
+  payload: "on"
+
+sprinkler_zone_4_off:
+  url: "http://<PI_IP_ADDRESS>:5050/zone/4"
+  method: POST
+  payload: "off"
+
+sprinkler_zone_5_on:
+  url: "http://<PI_IP_ADDRESS>:5050/zone/5"
+  method: POST
+  payload: "on"
+
+sprinkler_zone_5_off:
+  url: "http://<PI_IP_ADDRESS>:5050/zone/5"
+  method: POST
+  payload: "off"
+
+sprinkler_zone_6_on:
+  url: "http://<PI_IP_ADDRESS>:5050/zone/6"
+  method: POST
+  payload: "on"
+
+sprinkler_zone_6_off:
+  url: "http://<PI_IP_ADDRESS>:5050/zone/6"
+  method: POST
+  payload: "off"
+
+sprinkler_all_off:
+  url: "http://<PI_IP_ADDRESS>:5050/alloff"
+  method: POST

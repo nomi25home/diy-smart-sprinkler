@@ -1,0 +1,478 @@
+type: vertical-stack
+cards:
+  - type: custom:button-card
+    entity: sensor.sprinkler_active_zone
+    name: DIY Smart Sprinkler
+    label: |
+      [[[
+        return `Automated Irrigation • Last Ran on ${states['sensor.sprinkler_last_ran']?.state || 'Unknown'}`;
+      ]]]
+    show_name: true
+    show_label: true
+    show_icon: false
+    tap_action:
+      action: none
+    custom_fields:
+      status: |
+        [[[
+          const s = states['sensor.sprinkler_active_zone']?.state || 'Idle';
+          return s === 'Idle' ? 'Idle' : `Running: ${s}`;
+        ]]]
+      next: |
+        [[[
+          return `Next: ${states['sensor.sprinkler_next_run']?.state || 'Unknown'}`;
+        ]]]
+      runtime: |
+        [[[
+          return `${states['sensor.sprinkler_adjusted_runtime']?.state || '--'} min / zone`;
+        ]]]
+      rain: |
+        [[[
+          const rain = states['input_boolean.sprinkler_rain_skip']?.state;
+          return rain === 'on' ? 'Rain Skip On' : 'Rain Skip Off';
+        ]]]
+    styles:
+      card:
+        - height: 210px
+        - border-radius: 28px
+        - background-image: >-
+            linear-gradient(rgba(0,0,0,0.05), rgba(0,0,0,0.55)),
+            url("/local/images/sprinkler.jpeg")
+        - background-size: cover
+        - background-position: center
+        - background-repeat: no-repeat
+        - box-shadow: 0 10px 30px rgba(0,0,0,0.18)
+        - padding: 18px
+        - color: white
+      grid:
+        - grid-template-areas: |
+            "n n" "l l" ". ." "status rain" "next runtime"
+        - grid-template-columns: 1fr 1fr
+        - grid-template-rows: min-content min-content 1fr min-content min-content
+        - row-gap: 7px
+        - column-gap: 7px
+      name:
+        - color: white
+        - font-size: 21px
+        - font-weight: 800
+        - justify-self: start
+        - text-shadow: 0 2px 8px rgba(0,0,0,0.65)
+      label:
+        - color: rgba(255,255,255,0.92)
+        - font-size: 11px
+        - font-weight: 600
+        - justify-self: start
+        - text-shadow: 0 2px 8px rgba(0,0,0,0.65)
+      custom_fields:
+        status:
+          - justify-self: start
+          - align-self: end
+          - max-width: 170px
+          - background: rgba(255,255,255,0.18)
+          - backdrop-filter: blur(10px)
+          - color: white
+          - border: 1px solid rgba(255,255,255,0.35)
+          - border-radius: 999px
+          - padding: 5px 10px
+          - font-size: 11px
+          - font-weight: 800
+          - text-align: center
+          - overflow: hidden
+          - text-overflow: ellipsis
+          - white-space: nowrap
+        rain:
+          - justify-self: end
+          - align-self: end
+          - max-width: 135px
+          - background: |
+              [[[
+                return states['input_boolean.sprinkler_rain_skip']?.state === 'on'
+                  ? 'rgba(76,175,80,0.88)'
+                  : 'rgba(255,255,255,0.18)';
+              ]]]
+          - backdrop-filter: blur(10px)
+          - color: white
+          - border: 1px solid rgba(255,255,255,0.35)
+          - border-radius: 999px
+          - padding: 5px 10px
+          - font-size: 10.5px
+          - font-weight: 800
+          - text-align: center
+          - overflow: hidden
+          - text-overflow: ellipsis
+          - white-space: nowrap
+        next:
+          - justify-self: start
+          - max-width: 210px
+          - background: rgba(255,255,255,0.18)
+          - backdrop-filter: blur(10px)
+          - color: white
+          - border: 1px solid rgba(255,255,255,0.35)
+          - border-radius: 999px
+          - padding: 5px 10px
+          - font-size: 10.5px
+          - font-weight: 700
+          - text-align: center
+          - overflow: hidden
+          - text-overflow: ellipsis
+          - white-space: nowrap
+        runtime:
+          - justify-self: end
+          - max-width: 135px
+          - background: rgba(255,255,255,0.18)
+          - backdrop-filter: blur(10px)
+          - color: white
+          - border: 1px solid rgba(255,255,255,0.35)
+          - border-radius: 999px
+          - padding: 5px 10px
+          - font-size: 10.5px
+          - font-weight: 800
+          - text-align: center
+          - overflow: hidden
+          - text-overflow: ellipsis
+          - white-space: nowrap
+  - type: custom:bubble-card
+    card_type: separator
+    sub_button:
+      main: []
+      bottom: []
+  - type: horizontal-stack
+    cards:
+      - type: custom:bubble-card
+        card_type: button
+        name: Run All Zones
+        icon: mdi:play-circle
+        button_type: name
+        show_icon: true
+        show_name: true
+        styles: |
+          .bubble-button {
+            border-radius: 24px !important;
+            background: #ffffff !important;
+            border: 1px solid #e0e0e0 !important;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.08) !important;
+          }
+          .bubble-icon {
+            color: #0061a4 !important;
+          }
+        tap_action:
+          action: call-service
+          service: script.sprinkler_run_all_zones
+      - type: custom:bubble-card
+        card_type: button
+        name: All Off
+        icon: mdi:water-off
+        button_type: name
+        show_icon: true
+        show_name: true
+        styles: |
+          .bubble-button {
+            border-radius: 24px !important;
+            background: #ffffff !important;
+            border: 1px solid #e0e0e0 !important;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.08) !important;
+          }
+          .bubble-icon {
+            color: #b81311 !important;
+          }
+        tap_action:
+          action: call-service
+          service: rest_command.sprinkler_all_off
+  - type: custom:bubble-card
+    card_type: separator
+    sub_button:
+      main: []
+      bottom: []
+  - type: horizontal-stack
+    cards:
+      - type: custom:bubble-card
+        card_type: button
+        entity: sensor.sprinkler_zone_1_state
+        name: Zone 1
+        icon: mdi:sprinkler
+        button_type: name
+        show_icon: true
+        show_name: true
+        sub_button:
+          main:
+            - entity: sensor.zone_1_runtime_minutes
+              icon: mdi:clock-outline
+              show_state: true
+              show_icon: true
+              show_name: false
+              state_background: false
+          bottom: []
+        styles: |
+          .bubble-button {
+            background: ${state === 'True' || state === 'true' ? '#2196F3' : '#ffffff'} !important;
+            color: ${state === 'True' || state === 'true' ? 'white' : '#1a1c1c'} !important;
+            border: ${state === 'True' || state === 'true' ? '2px solid #1976D2' : '1px solid #e0e0e0'} !important;
+            box-shadow: ${state === 'True' || state === 'true' ? '0 8px 20px rgba(33,150,243,0.30)' : '0 6px 16px rgba(0,0,0,0.08)'} !important;
+          }
+          .bubble-icon {
+            color: ${state === 'True' || state === 'true' ? '#FFD54F' : '#404752'} !important;
+            opacity: 1 !important;
+          }
+          .bubble-name {
+            color: ${state === 'True' || state === 'true' ? 'white' : '#1a1c1c'} !important;
+          }
+          .sub-button {
+            border: 1px solid rgba(0,0,0,0.15) !important;
+          }
+        tap_action:
+          action: call-service
+          service: rest_command.sprinkler_zone_1_on
+        hold_action:
+          action: call-service
+          service: rest_command.sprinkler_zone_1_off
+      - type: custom:bubble-card
+        card_type: button
+        entity: sensor.sprinkler_zone_2_state
+        name: Zone 2
+        icon: mdi:sprinkler
+        button_type: name
+        show_icon: true
+        show_name: true
+        sub_button:
+          main:
+            - entity: sensor.zone_2_runtime_minutes
+              icon: mdi:clock-outline
+              show_state: true
+              show_icon: true
+              show_name: false
+              state_background: false
+          bottom: []
+        styles: |
+          .bubble-button {
+            background: ${state === 'True' || state === 'true' ? '#2196F3' : '#ffffff'} !important;
+            color: ${state === 'True' || state === 'true' ? 'white' : '#1a1c1c'} !important;
+            border: ${state === 'True' || state === 'true' ? '2px solid #1976D2' : '1px solid #e0e0e0'} !important;
+            box-shadow: ${state === 'True' || state === 'true' ? '0 8px 20px rgba(33,150,243,0.30)' : '0 6px 16px rgba(0,0,0,0.08)'} !important;
+          }
+          .bubble-icon {
+            color: ${state === 'True' || state === 'true' ? '#FFD54F' : '#404752'} !important;
+            opacity: 1 !important;
+          }
+          .bubble-name {
+            color: ${state === 'True' || state === 'true' ? 'white' : '#1a1c1c'} !important;
+          }
+          .sub-button {
+            border: 1px solid rgba(0,0,0,0.15) !important;
+          }
+        tap_action:
+          action: call-service
+          service: rest_command.sprinkler_zone_2_on
+        hold_action:
+          action: call-service
+          service: rest_command.sprinkler_zone_2_off
+  - type: horizontal-stack
+    cards:
+      - type: custom:bubble-card
+        card_type: button
+        entity: sensor.sprinkler_zone_3_state
+        name: Zone 3
+        icon: mdi:sprinkler
+        button_type: name
+        show_icon: true
+        show_name: true
+        sub_button:
+          main:
+            - entity: sensor.zone_3_runtime_minutes
+              icon: mdi:clock-outline
+              show_state: true
+              show_icon: true
+              show_name: false
+              state_background: false
+          bottom: []
+        styles: |
+          .bubble-button {
+            background: ${state === 'True' || state === 'true' ? '#2196F3' : '#ffffff'} !important;
+            color: ${state === 'True' || state === 'true' ? 'white' : '#1a1c1c'} !important;
+            border: ${state === 'True' || state === 'true' ? '2px solid #1976D2' : '1px solid #e0e0e0'} !important;
+            box-shadow: ${state === 'True' || state === 'true' ? '0 8px 20px rgba(33,150,243,0.30)' : '0 6px 16px rgba(0,0,0,0.08)'} !important;
+          }
+          .bubble-icon {
+            color: ${state === 'True' || state === 'true' ? '#FFD54F' : '#404752'} !important;
+            opacity: 1 !important;
+          }
+          .bubble-name {
+            color: ${state === 'True' || state === 'true' ? 'white' : '#1a1c1c'} !important;
+          }
+          .sub-button {
+            border: 1px solid rgba(0,0,0,0.15) !important;
+          }
+        tap_action:
+          action: call-service
+          service: rest_command.sprinkler_zone_3_on
+        hold_action:
+          action: call-service
+          service: rest_command.sprinkler_zone_3_off
+      - type: custom:bubble-card
+        card_type: button
+        entity: sensor.sprinkler_zone_4_state
+        name: Zone 4
+        icon: mdi:sprinkler
+        button_type: name
+        show_icon: true
+        show_name: true
+        sub_button:
+          main:
+            - entity: sensor.zone_4_runtime_minutes
+              icon: mdi:clock-outline
+              show_state: true
+              show_icon: true
+              show_name: false
+              state_background: false
+          bottom: []
+        styles: |
+          .bubble-button {
+            background: ${state === 'True' || state === 'true' ? '#2196F3' : '#ffffff'} !important;
+            color: ${state === 'True' || state === 'true' ? 'white' : '#1a1c1c'} !important;
+            border: ${state === 'True' || state === 'true' ? '2px solid #1976D2' : '1px solid #e0e0e0'} !important;
+            box-shadow: ${state === 'True' || state === 'true' ? '0 8px 20px rgba(33,150,243,0.30)' : '0 6px 16px rgba(0,0,0,0.08)'} !important;
+          }
+          .bubble-icon {
+            color: ${state === 'True' || state === 'true' ? '#FFD54F' : '#404752'} !important;
+            opacity: 1 !important;
+          }
+          .bubble-name {
+            color: ${state === 'True' || state === 'true' ? 'white' : '#1a1c1c'} !important;
+          }
+          .sub-button {
+            border: 1px solid rgba(0,0,0,0.15) !important;
+          }
+        tap_action:
+          action: call-service
+          service: rest_command.sprinkler_zone_4_on
+        hold_action:
+          action: call-service
+          service: rest_command.sprinkler_zone_4_off
+  - type: horizontal-stack
+    cards:
+      - type: custom:bubble-card
+        card_type: button
+        entity: sensor.sprinkler_zone_5_state
+        name: Zone 5
+        icon: mdi:sprinkler
+        button_type: name
+        show_icon: true
+        show_name: true
+        sub_button:
+          main:
+            - entity: sensor.zone_5_runtime_minutes
+              icon: mdi:clock-outline
+              show_state: true
+              show_icon: true
+              show_name: false
+              state_background: false
+          bottom: []
+        styles: |
+          .bubble-button {
+            background: ${state === 'True' || state === 'true' ? '#2196F3' : '#ffffff'} !important;
+            color: ${state === 'True' || state === 'true' ? 'white' : '#1a1c1c'} !important;
+            border: ${state === 'True' || state === 'true' ? '2px solid #1976D2' : '1px solid #e0e0e0'} !important;
+            box-shadow: ${state === 'True' || state === 'true' ? '0 8px 20px rgba(33,150,243,0.30)' : '0 6px 16px rgba(0,0,0,0.08)'} !important;
+          }
+          .bubble-icon {
+            color: ${state === 'True' || state === 'true' ? '#FFD54F' : '#404752'} !important;
+            opacity: 1 !important;
+          }
+          .bubble-name {
+            color: ${state === 'True' || state === 'true' ? 'white' : '#1a1c1c'} !important;
+          }
+          .sub-button {
+            border: 1px solid rgba(0,0,0,0.15) !important;
+          }
+        tap_action:
+          action: call-service
+          service: rest_command.sprinkler_zone_5_on
+        hold_action:
+          action: call-service
+          service: rest_command.sprinkler_zone_5_off
+      - type: custom:bubble-card
+        card_type: button
+        entity: sensor.sprinkler_zone_6_state
+        name: Zone 6
+        icon: mdi:sprinkler
+        button_type: name
+        show_icon: true
+        show_name: true
+        sub_button:
+          main:
+            - entity: sensor.zone_6_runtime_minutes
+              icon: mdi:clock-outline
+              show_state: true
+              show_icon: true
+              show_name: false
+              state_background: false
+          bottom: []
+        styles: |
+          .bubble-button {
+            background: ${state === 'True' || state === 'true' ? '#2196F3' : '#ffffff'} !important;
+            color: ${state === 'True' || state === 'true' ? 'white' : '#1a1c1c'} !important;
+            border: ${state === 'True' || state === 'true' ? '2px solid #1976D2' : '1px solid #e0e0e0'} !important;
+            box-shadow: ${state === 'True' || state === 'true' ? '0 8px 20px rgba(33,150,243,0.30)' : '0 6px 16px rgba(0,0,0,0.08)'} !important;
+          }
+          .bubble-icon {
+            color: ${state === 'True' || state === 'true' ? '#FFD54F' : '#404752'} !important;
+            opacity: 1 !important;
+          }
+          .bubble-name {
+            color: ${state === 'True' || state === 'true' ? 'white' : '#1a1c1c'} !important;
+          }
+          .sub-button {
+            border: 1px solid rgba(0,0,0,0.15) !important;
+          }
+        tap_action:
+          action: call-service
+          service: rest_command.sprinkler_zone_6_on
+        hold_action:
+          action: call-service
+          service: rest_command.sprinkler_zone_6_off
+  - type: custom:bubble-card
+    card_type: separator
+    sub_button:
+      main: []
+      bottom: []
+  - type: custom:bubble-card
+    card_type: button
+    name: EMERGENCY ALL OFF
+    icon: mdi:alert-octagon
+    button_type: name
+    show_icon: true
+    show_name: true
+    sub_button:
+      main: []
+      bottom: []
+    styles: |2-
+        .bubble-button {
+          border-radius: 28px !important;
+          background: linear-gradient(135deg, #b81311, #d50000) !important;
+          color: white !important;
+          box-shadow: 0 10px 28px rgba(184,19,17,0.45) !important;
+          border: 2px solid rgba(255,255,255,0.18) !important;
+          font-weight: 800 !important;
+        }
+
+        .bubble-button:active {
+          transform: scale(0.98) !important;
+        }
+
+        .bubble-icon {
+          color: ${state === 'True' || state === 'true' ? '#FFD54F' : '#404752'} !important;
+          opacity: 1 !important;
+        }
+
+        .bubble-name {
+          color: white !important;
+          font-weight: 800 !important;
+          letter-spacing: 0.02em !important;
+        }
+
+        .sub-button {
+          display: none !important;
+        }
+    tap_action:
+      action: call-service
+      service: rest_command.sprinkler_all_off
+
