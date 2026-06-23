@@ -1,0 +1,71 @@
+sprinkler_manual_timeout_hours:
+  name: Manual Mode Timeout
+  icon: mdi:timer
+  min: 1
+  max: 24
+  step: 1
+  initial: 4
+  unit_of_measurement: hours
+
+sprinkler_vacation_days:
+  name: Vacation Skip Days
+  icon: mdi:calendar-clock
+  min: 1
+  max: 30
+  step: 1
+  initial: 7
+  unit_of_measurement: days
+
+sprinkler_zone_1_runtime:
+  name: Zone 1 Runtime Override
+  icon: mdi:timer-cog
+  min: 5
+  max: 60
+  step: 1
+  initial: 20
+  unit_of_measurement: min
+
+sprinkler_zone_2_runtime:
+  name: Zone 2 Runtime Override
+  icon: mdi:timer-cog
+  min: 5
+  max: 60
+  step: 1
+  initial: 20
+  unit_of_measurement: min
+
+sprinkler_zone_3_runtime:
+  name: Zone 3 Runtime Override
+  icon: mdi:timer-cog
+  min: 5
+  max: 60
+  step: 1
+  initial: 20
+  unit_of_measurement: min
+
+sprinkler_zone_4_runtime:
+  name: Zone 4 Runtime Override
+  icon: mdi:timer-cog
+  min: 5
+  max: 60
+  step: 1
+  initial: 20
+  unit_of_measurement: min
+
+sprinkler_zone_5_runtime:
+  name: Zone 5 Runtime Override
+  icon: mdi:timer-cog
+  min: 5
+  max: 60
+  step: 1
+  initial: 20
+  unit_of_measurement: min
+
+sprinkler_zone_6_runtime:
+  name: Zone 6 Runtime Override
+  icon: mdi:timer-cog
+  min: 5
+  max: 60
+  step: 1
+  initial: 20
+  unit_of_measurement: min
