@@ -9,6 +9,176 @@
   - condition: state
     entity_id: input_boolean.sprinkler_rain_skip
     state: 'off'
+  - condition: state
+    entity_id: input_boolean.sprinkler_manual_mode
+    state: 'off'
+  - condition: state
+    entity_id: input_boolean.sprinkler_vacation_mode
+    state: 'off'
+  - condition: state
+    entity_id: binary_sensor.smart_rain_skip
+    state: 'off'
   action:
   - service: script.sprinkler_run_all_zones
+  mode: single
+
+- id: 'manual_mode_auto_expiry'
+  alias: Sprinkler Manual Mode Auto-Expiry
+  trigger:
+  - platform: state
+    entity_id: input_boolean.sprinkler_manual_mode
+    to: 'on'
+  action:
+  - delay: "{{ states('input_number.sprinkler_manual_timeout_hours') | int(4) }}:00:00"
+  - condition: state
+    entity_id: input_boolean.sprinkler_manual_mode
+    state: 'on'
+  - action: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.sprinkler_manual_mode
+  - action: script.whatsapp_me
+    continue_on_error: true
+    data:
+      message: >
+        Sprinkler manual mode auto-expired after
+        {{ states('input_number.sprinkler_manual_timeout_hours') | int(4) }} hours.
+        System returned to AUTO scheduling.
+  mode: restart
+
+- id: 'safety_shutoff_per_zone'
+  alias: Sprinkler Safety Shutoff Per Zone
+  trigger:
+  - platform: state
+    entity_id: sensor.sprinkler_zone_1_state
+    to: 'True'
+    for:
+      minutes: 40
+  - platform: state
+    entity_id: sensor.sprinkler_zone_2_state
+    to: 'True'
+    for:
+      minutes: 40
+  - platform: state
+    entity_id: sensor.sprinkler_zone_3_state
+    to: 'True'
+    for:
+      minutes: 40
+  - platform: state
+    entity_id: sensor.sprinkler_zone_4_state
+    to: 'True'
+    for:
+      minutes: 40
+  - platform: state
+    entity_id: sensor.sprinkler_zone_5_state
+    to: 'True'
+    for:
+      minutes: 40
+  - platform: state
+    entity_id: sensor.sprinkler_zone_6_state
+    to: 'True'
+    for:
+      minutes: 40
+  action:
+  - action: rest_command.sprinkler_all_off
+  - action: persistent_notification.create
+    data:
+      title: "Sprinkler Safety Shutoff"
+      message: >
+        Zone {{ trigger.entity_id | replace('sensor.sprinkler_zone_', '') | replace('_state', '') }}
+        was running for more than 40 minutes and was shut off automatically.
+  - action: script.whatsapp_me
+    continue_on_error: true
+    data:
+      message: >
+        Sprinkler safety shutoff triggered. Zone
+        {{ trigger.entity_id | replace('sensor.sprinkler_zone_', '') | replace('_state', '') }}
+        ran for more than 40 minutes and was shut off.
+  mode: single
+
+- id: 'enable_rain_skip_when_raining'
+  alias: Enable Rain Skip When Raining
+  trigger:
+  - platform: state
+    entity_id: weather.home
+    to:
+    - 'rainy'
+    - 'pouring'
+    - 'lightning-rainy'
+  action:
+  - action: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.sprinkler_rain_skip
+  mode: single
+
+- id: 'reset_rain_skip_daily'
+  alias: Reset Rain Skip Daily
+  trigger:
+  - platform: time
+    at: '03:00:00'
+  action:
+  - action: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.sprinkler_rain_skip
+  mode: single
+
+- id: 'vacation_mode_end'
+  alias: Sprinkler Vacation Mode End
+  trigger:
+  - platform: time
+    at: '00:00:00'
+  condition:
+  - condition: state
+    entity_id: input_boolean.sprinkler_vacation_mode
+    state: 'on'
+  - condition: template
+    value_template: >
+      {{ now().date() >= as_datetime(states('input_datetime.sprinkler_vacation_until')).date() }}
+  action:
+  - action: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.sprinkler_vacation_mode
+  - action: script.whatsapp_me
+    continue_on_error: true
+    data:
+      message: "Sprinkler vacation mode ended. System returned to AUTO scheduling."
+  mode: single
+
+- id: 'notify_schedule_skipped'
+  alias: Sprinkler Notify Schedule Skipped
+  trigger:
+  - platform: time
+    at: 05:30:00
+  - platform: time
+    at: '17:30:00'
+  condition:
+  - condition: or
+    conditions:
+    - condition: state
+      entity_id: input_boolean.sprinkler_manual_mode
+      state: 'on'
+    - condition: state
+      entity_id: input_boolean.sprinkler_rain_skip
+      state: 'on'
+    - condition: state
+      entity_id: binary_sensor.smart_rain_skip
+      state: 'on'
+    - condition: state
+      entity_id: input_boolean.sprinkler_vacation_mode
+      state: 'on'
+  action:
+  - action: script.whatsapp_me
+    continue_on_error: true
+    data:
+      message: >
+        Sprinkler schedule skipped at {{ now().strftime('%I:%M %p') }}.
+        Reason:
+        {% if is_state('input_boolean.sprinkler_manual_mode', 'on') %}
+          Manual mode active.
+        {% elif is_state('input_boolean.sprinkler_vacation_mode', 'on') %}
+          Vacation mode active until {{ states('input_datetime.sprinkler_vacation_until') }}.
+        {% elif is_state('input_boolean.sprinkler_rain_skip', 'on') %}
+          Manual rain skip enabled.
+        {% elif is_state('binary_sensor.smart_rain_skip', 'on') %}
+          Rain detected ({{ states('weather.home') }}).
+        {% endif %}
   mode: single
