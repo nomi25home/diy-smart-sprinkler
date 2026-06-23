@@ -81,3 +81,51 @@
   type: time
   start: "{{ now().replace(hour=0, minute=0, second=0) }}"
   end: "{{ now() }}"
+
+- platform: history_stats
+  name: Sprinkler Zone 1 Runtime This Week
+  entity_id: sensor.sprinkler_zone_1_state
+  state: "True"
+  type: time
+  start: "{{ now() - timedelta(days=7) }}"
+  end: "{{ now() }}"
+
+- platform: history_stats
+  name: Sprinkler Zone 2 Runtime This Week
+  entity_id: sensor.sprinkler_zone_2_state
+  state: "True"
+  type: time
+  start: "{{ now() - timedelta(days=7) }}"
+  end: "{{ now() }}"
+
+- platform: history_stats
+  name: Sprinkler Zone 3 Runtime This Week
+  entity_id: sensor.sprinkler_zone_3_state
+  state: "True"
+  type: time
+  start: "{{ now() - timedelta(days=7) }}"
+  end: "{{ now() }}"
+
+- platform: history_stats
+  name: Sprinkler Zone 4 Runtime This Week
+  entity_id: sensor.sprinkler_zone_4_state
+  state: "True"
+  type: time
+  start: "{{ now() - timedelta(days=7) }}"
+  end: "{{ now() }}"
+
+- platform: history_stats
+  name: Sprinkler Zone 5 Runtime This Week
+  entity_id: sensor.sprinkler_zone_5_state
+  state: "True"
+  type: time
+  start: "{{ now() - timedelta(days=7) }}"
+  end: "{{ now() }}"
+
+- platform: history_stats
+  name: Sprinkler Zone 6 Runtime This Week
+  entity_id: sensor.sprinkler_zone_6_state
+  state: "True"
+  type: time
+  start: "{{ now() - timedelta(days=7) }}"
+  end: "{{ now() }}"
