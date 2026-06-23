@@ -6,6 +6,14 @@ sprinkler_run_all_zones:
       entity_id: input_boolean.sprinkler_rain_skip
       state: "off"
 
+    - condition: state
+      entity_id: input_boolean.sprinkler_manual_mode
+      state: "off"
+
+    - condition: state
+      entity_id: input_boolean.sprinkler_vacation_mode
+      state: "off"
+
     - action: input_datetime.set_datetime
       target:
         entity_id: input_datetime.sprinkler_last_run
@@ -17,36 +25,47 @@ sprinkler_run_all_zones:
         title: Sprinkler started
         message: >
           Sprinkler run started at {{ now().strftime('%I:%M %p') }}.
-          Runtime per zone: {{ states('sensor.sprinkler_adjusted_runtime') }} minutes.
+
+    - action: script.whatsapp_me
+      continue_on_error: true
+      data:
+        message: >
+          Sprinkler run started at {{ now().strftime('%I:%M %p') }}.
+          Zone runtimes: Z1={{ states('input_number.sprinkler_zone_1_runtime') | int }}m,
+          Z2={{ states('input_number.sprinkler_zone_2_runtime') | int }}m,
+          Z3={{ states('input_number.sprinkler_zone_3_runtime') | int }}m,
+          Z4={{ states('input_number.sprinkler_zone_4_runtime') | int }}m,
+          Z5={{ states('input_number.sprinkler_zone_5_runtime') | int }}m,
+          Z6={{ states('input_number.sprinkler_zone_6_runtime') | int }}m.
 
     - action: rest_command.sprinkler_zone_1_on
     - delay:
-        minutes: "{{ states('sensor.sprinkler_adjusted_runtime') | int(20) }}"
+        minutes: "{{ states('input_number.sprinkler_zone_1_runtime') | int(20) }}"
     - action: rest_command.sprinkler_zone_1_off
 
     - action: rest_command.sprinkler_zone_2_on
     - delay:
-        minutes: "{{ states('sensor.sprinkler_adjusted_runtime') | int(20) }}"
+        minutes: "{{ states('input_number.sprinkler_zone_2_runtime') | int(20) }}"
     - action: rest_command.sprinkler_zone_2_off
 
     - action: rest_command.sprinkler_zone_3_on
     - delay:
-        minutes: "{{ states('sensor.sprinkler_adjusted_runtime') | int(20) }}"
+        minutes: "{{ states('input_number.sprinkler_zone_3_runtime') | int(20) }}"
     - action: rest_command.sprinkler_zone_3_off
 
     - action: rest_command.sprinkler_zone_4_on
     - delay:
-        minutes: "{{ states('sensor.sprinkler_adjusted_runtime') | int(20) }}"
+        minutes: "{{ states('input_number.sprinkler_zone_4_runtime') | int(20) }}"
     - action: rest_command.sprinkler_zone_4_off
 
     - action: rest_command.sprinkler_zone_5_on
     - delay:
-        minutes: "{{ states('sensor.sprinkler_adjusted_runtime') | int(20) }}"
+        minutes: "{{ states('input_number.sprinkler_zone_5_runtime') | int(20) }}"
     - action: rest_command.sprinkler_zone_5_off
 
     - action: rest_command.sprinkler_zone_6_on
     - delay:
-        minutes: "{{ states('sensor.sprinkler_adjusted_runtime') | int(20) }}"
+        minutes: "{{ states('input_number.sprinkler_zone_6_runtime') | int(20) }}"
     - action: rest_command.sprinkler_zone_6_off
 
     - action: rest_command.sprinkler_all_off
@@ -56,3 +75,46 @@ sprinkler_run_all_zones:
         title: Sprinkler completed
         message: >
           Sprinkler run completed at {{ now().strftime('%I:%M %p') }}.
+          Total runtime:
+          {{ states('input_number.sprinkler_zone_1_runtime') | int(20) +
+             states('input_number.sprinkler_zone_2_runtime') | int(20) +
+             states('input_number.sprinkler_zone_3_runtime') | int(20) +
+             states('input_number.sprinkler_zone_4_runtime') | int(20) +
+             states('input_number.sprinkler_zone_5_runtime') | int(20) +
+             states('input_number.sprinkler_zone_6_runtime') | int(20) }} minutes.
+
+    - action: script.whatsapp_me
+      continue_on_error: true
+      data:
+        message: >
+          Sprinkler run completed at {{ now().strftime('%I:%M %p') }}.
+          Total runtime:
+          {{ states('input_number.sprinkler_zone_1_runtime') | int(20) +
+             states('input_number.sprinkler_zone_2_runtime') | int(20) +
+             states('input_number.sprinkler_zone_3_runtime') | int(20) +
+             states('input_number.sprinkler_zone_4_runtime') | int(20) +
+             states('input_number.sprinkler_zone_5_runtime') | int(20) +
+             states('input_number.sprinkler_zone_6_runtime') | int(20) }} minutes.
+
+sprinkler_set_vacation:
+  alias: Set Vacation Mode
+  mode: single
+  sequence:
+    - action: input_datetime.set_datetime
+      target:
+        entity_id: input_datetime.sprinkler_vacation_until
+      data:
+        date: >
+          {{ (now() + timedelta(days=states('input_number.sprinkler_vacation_days') | int(7))).strftime('%Y-%m-%d') }}
+
+    - action: input_boolean.turn_on
+      target:
+        entity_id: input_boolean.sprinkler_vacation_mode
+
+    - action: script.whatsapp_me
+      continue_on_error: true
+      data:
+        message: >
+          Sprinkler vacation mode enabled for
+          {{ states('input_number.sprinkler_vacation_days') | int(7) }} days.
+          Watering paused until {{ states('input_datetime.sprinkler_vacation_until') }}.
