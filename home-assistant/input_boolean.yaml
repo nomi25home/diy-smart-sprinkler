@@ -1,3 +1,11 @@
 sprinkler_rain_skip:
   name: Sprinkler Rain Skip
   icon: mdi:weather-rainy
+
+sprinkler_manual_mode:
+  name: Sprinkler Manual Mode
+  icon: mdi:hand-back-right
+
+sprinkler_vacation_mode:
+  name: Sprinkler Vacation Mode
+  icon: mdi:airplane
