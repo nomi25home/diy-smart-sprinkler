@@ -2,3 +2,8 @@ sprinkler_last_run:
   name: Sprinkler Last Run
   has_date: true
   has_time: true
+
+sprinkler_vacation_until:
+  name: Sprinkler Vacation Until
+  has_date: true
+  has_time: false
