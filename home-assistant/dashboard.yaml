@@ -24,12 +24,12 @@ cards:
         ]]]
       runtime: |
         [[[
-          return `${states['sensor.sprinkler_adjusted_runtime']?.state || '--'} min / zone`;
+          return `Weather suggests: ${states['sensor.sprinkler_adjusted_runtime']?.state || '--'} min`;
         ]]]
-      rain: |
+      mode: |
         [[[
-          const rain = states['input_boolean.sprinkler_rain_skip']?.state;
-          return rain === 'on' ? 'Rain Skip On' : 'Rain Skip Off';
+          const m = states['sensor.sprinkler_mode']?.state || 'AUTO';
+          return m;
         ]]]
     styles:
       card:
@@ -46,7 +46,7 @@ cards:
         - color: white
       grid:
         - grid-template-areas: |
-            "n n" "l l" ". ." "status rain" "next runtime"
+            "n n" "l l" ". ." "status mode" "next runtime"
         - grid-template-columns: 1fr 1fr
         - grid-template-rows: min-content min-content 1fr min-content min-content
         - row-gap: 7px
@@ -80,15 +80,17 @@ cards:
           - overflow: hidden
           - text-overflow: ellipsis
           - white-space: nowrap
-        rain:
+        mode:
           - justify-self: end
           - align-self: end
           - max-width: 135px
           - background: |
               [[[
-                return states['input_boolean.sprinkler_rain_skip']?.state === 'on'
-                  ? 'rgba(76,175,80,0.88)'
-                  : 'rgba(255,255,255,0.18)';
+                const m = states['sensor.sprinkler_mode']?.state || 'AUTO';
+                if (m === 'MANUAL') return 'rgba(255,152,0,0.88)';
+                if (m === 'VACATION') return 'rgba(33,150,243,0.88)';
+                if (m === 'RAIN SKIP') return 'rgba(120,120,120,0.88)';
+                return 'rgba(76,175,80,0.55)';
               ]]]
           - backdrop-filter: blur(10px)
           - color: white
@@ -118,7 +120,7 @@ cards:
           - white-space: nowrap
         runtime:
           - justify-self: end
-          - max-width: 135px
+          - max-width: 165px
           - background: rgba(255,255,255,0.18)
           - backdrop-filter: blur(10px)
           - color: white
@@ -187,6 +189,80 @@ cards:
     cards:
       - type: custom:bubble-card
         card_type: button
+        entity: input_boolean.sprinkler_manual_mode
+        name: Manual Mode
+        icon: mdi:hand-back-right
+        button_type: name
+        show_icon: true
+        show_name: true
+        sub_button:
+          main:
+            - entity: input_number.sprinkler_manual_timeout_hours
+              icon: mdi:timer
+              show_state: true
+              show_icon: true
+              show_name: false
+              state_background: false
+          bottom: []
+        styles: |
+          .bubble-button {
+            background: ${state === 'on' ? '#FF9800' : '#ffffff'} !important;
+            color: ${state === 'on' ? 'white' : '#1a1c1c'} !important;
+            border: ${state === 'on' ? '2px solid #F57C00' : '1px solid #e0e0e0'} !important;
+            box-shadow: ${state === 'on' ? '0 8px 20px rgba(255,152,0,0.30)' : '0 6px 16px rgba(0,0,0,0.08)'} !important;
+          }
+          .bubble-icon {
+            color: ${state === 'on' ? 'white' : '#404752'} !important;
+          }
+          .bubble-name {
+            color: ${state === 'on' ? 'white' : '#1a1c1c'} !important;
+          }
+        tap_action:
+          action: toggle
+      - type: custom:bubble-card
+        card_type: button
+        entity: input_boolean.sprinkler_vacation_mode
+        name: Vacation Mode
+        icon: mdi:airplane
+        button_type: name
+        show_icon: true
+        show_name: true
+        sub_button:
+          main:
+            - entity: sensor.vacation_countdown
+              icon: mdi:calendar-clock
+              show_state: true
+              show_icon: true
+              show_name: false
+              state_background: false
+          bottom: []
+        styles: |
+          .bubble-button {
+            background: ${state === 'on' ? '#2196F3' : '#ffffff'} !important;
+            color: ${state === 'on' ? 'white' : '#1a1c1c'} !important;
+            border: ${state === 'on' ? '2px solid #1976D2' : '1px solid #e0e0e0'} !important;
+            box-shadow: ${state === 'on' ? '0 8px 20px rgba(33,150,243,0.30)' : '0 6px 16px rgba(0,0,0,0.08)'} !important;
+          }
+          .bubble-icon {
+            color: ${state === 'on' ? 'white' : '#404752'} !important;
+          }
+          .bubble-name {
+            color: ${state === 'on' ? 'white' : '#1a1c1c'} !important;
+          }
+        tap_action:
+          action: call-service
+          service: script.sprinkler_set_vacation
+        hold_action:
+          action: toggle
+  - type: custom:bubble-card
+    card_type: separator
+    sub_button:
+      main: []
+      bottom: []
+  - type: horizontal-stack
+    cards:
+      - type: custom:bubble-card
+        card_type: button
         entity: sensor.sprinkler_zone_1_state
         name: Zone 1
         icon: mdi:sprinkler
@@ -197,6 +273,12 @@ cards:
           main:
             - entity: sensor.zone_1_runtime_minutes
               icon: mdi:clock-outline
+              show_state: true
+              show_icon: true
+              show_name: false
+              state_background: false
+            - entity: sensor.zone_1_runtime_this_week_minutes
+              icon: mdi:calendar-week
               show_state: true
               show_icon: true
               show_name: false
@@ -237,6 +319,12 @@ cards:
           main:
             - entity: sensor.zone_2_runtime_minutes
               icon: mdi:clock-outline
+              show_state: true
+              show_icon: true
+              show_name: false
+              state_background: false
+            - entity: sensor.zone_2_runtime_this_week_minutes
+              icon: mdi:calendar-week
               show_state: true
               show_icon: true
               show_name: false
@@ -283,6 +371,12 @@ cards:
               show_icon: true
               show_name: false
               state_background: false
+            - entity: sensor.zone_3_runtime_this_week_minutes
+              icon: mdi:calendar-week
+              show_state: true
+              show_icon: true
+              show_name: false
+              state_background: false
           bottom: []
         styles: |
           .bubble-button {
@@ -319,6 +413,12 @@ cards:
           main:
             - entity: sensor.zone_4_runtime_minutes
               icon: mdi:clock-outline
+              show_state: true
+              show_icon: true
+              show_name: false
+              state_background: false
+            - entity: sensor.zone_4_runtime_this_week_minutes
+              icon: mdi:calendar-week
               show_state: true
               show_icon: true
               show_name: false
@@ -365,6 +465,12 @@ cards:
               show_icon: true
               show_name: false
               state_background: false
+            - entity: sensor.zone_5_runtime_this_week_minutes
+              icon: mdi:calendar-week
+              show_state: true
+              show_icon: true
+              show_name: false
+              state_background: false
           bottom: []
         styles: |
           .bubble-button {
@@ -401,6 +507,12 @@ cards:
           main:
             - entity: sensor.zone_6_runtime_minutes
               icon: mdi:clock-outline
+              show_state: true
+              show_icon: true
+              show_name: false
+              state_background: false
+            - entity: sensor.zone_6_runtime_this_week_minutes
+              icon: mdi:calendar-week
               show_state: true
               show_icon: true
               show_name: false
@@ -475,4 +587,3 @@ cards:
     tap_action:
       action: call-service
       service: rest_command.sprinkler_all_off
-
