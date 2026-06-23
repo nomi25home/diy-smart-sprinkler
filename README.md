@@ -14,11 +14,16 @@ This project turns a Raspberry Pi 2 running Raspberry Pi OS Bookworm into a loca
 - Manual zone control
 - Run-all-zones script
 - Emergency all-off command
-- Rain skip toggle
-- Weather-adjusted runtime support
+- **Manual override mode** with configurable auto-expiry (default 4 hours)
+- **Vacation mode** — pause all scheduling for a configurable number of days
+- **Per-zone runtime overrides** — set each zone independently (5–60 min)
+- **7-day rolling runtime history** per zone
+- **WhatsApp notifications** on run start, completion, skipped runs, manual mode expiry, and safety shutoff
+- Rain skip toggle (manual and automatic weather-based)
+- Weather-adjusted runtime reference sensor
 - Last run / next run display
-- Per-zone runtime display
-- Safety logic: only one zone is enabled at a time
+- Mode indicator: AUTO / MANUAL / VACATION / RAIN SKIP
+- Safety shutoff: any zone running >40 minutes is automatically cut off
 
 ## Screenshots
 
@@ -168,7 +173,7 @@ Sample Home Assistant YAML files are in:
 home-assistant/
 ```
 
-At minimum, you will need:
+You will need all of these files:
 
 - `rest_command.yaml`
 - `scripts.yaml`
@@ -177,9 +182,10 @@ At minimum, you will need:
 - `template.yaml`
 - `input_boolean.yaml`
 - `input_datetime.yaml`
+- `input_number.yaml`
 - `dashboard.yaml`
 
-Make sure your `configuration.yaml` includes the relevant split files, for example:
+Make sure your `configuration.yaml` includes the relevant split files:
 
 ```yaml
 rest_command: !include rest_command.yaml
@@ -188,9 +194,23 @@ sensor: !include sensors.yaml
 template: !include template.yaml
 input_boolean: !include input_boolean.yaml
 input_datetime: !include input_datetime.yaml
+input_number: !include input_number.yaml
 ```
 
 If you already use split files, merge the examples into your existing files.
+
+### Recorder Retention
+
+The 7-day runtime history sensors use `history_stats` which queries the HA recorder database. The default recorder retention (10 days) is sufficient, but adding a safety margin is recommended. In `configuration.yaml`:
+
+```yaml
+recorder:
+  purge_keep_days: 14
+```
+
+### WhatsApp Notifications (Optional)
+
+Notifications use `script.whatsapp_me` via the OpenWA integration. If you don't have this set up, all notification steps will fail silently — the rest of the automation and script logic continues normally. The `continue_on_error: true` flag is set on all notification calls so nothing breaks if OpenWA is not running.
 
 ## Home Assistant Commands
 
@@ -216,6 +236,38 @@ sprinkler_all_off:
   method: POST
 ```
 
+## Modes
+
+### AUTO (default)
+
+The schedule automation runs at 5:30 AM and 5:30 PM if no skip conditions are active.
+
+### MANUAL
+
+Toggle `input_boolean.sprinkler_manual_mode` on to pause all scheduling. Manual mode auto-expires after the configured timeout (default 4 hours, adjustable via `input_number.sprinkler_manual_timeout_hours`). A WhatsApp notification is sent when it expires and the system returns to AUTO.
+
+Changing the timeout value while manual mode is already active does not update the current countdown — the delay was evaluated at trigger time. Turn manual mode off and back on to apply a new timeout value.
+
+Individual zones can still be turned on and off directly from the dashboard while in manual mode.
+
+### VACATION
+
+Call `script.sprinkler_set_vacation` to enable vacation mode. It reads `input_number.sprinkler_vacation_days` (default 7) and sets `input_datetime.sprinkler_vacation_until` to that many days from now. All scheduling is paused until that date. Vacation mode turns off automatically at midnight on or after the vacation-until date (within ~24 hours of expiry).
+
+### RAIN SKIP
+
+`input_boolean.sprinkler_rain_skip` can be toggled manually or is set automatically by the `Enable Rain Skip When Raining` automation when `weather.home` reports rainy/pouring/lightning-rainy. It resets automatically at 3:00 AM daily.
+
+## Per-Zone Runtime
+
+Each zone has a configurable runtime via `input_number.sprinkler_zone_N_runtime` (5–60 min, default 20). These values are used directly by `script.sprinkler_run_all_zones` and replace the weather-adjusted runtime for scheduling purposes. The `Sprinkler Adjusted Runtime` sensor still displays a weather-based suggestion as a reference.
+
+## Safety Shutoff
+
+The `Sprinkler Safety Shutoff Per Zone` automation fires if any single zone is on continuously for more than 40 minutes. It calls `sprinkler_all_off`, creates a persistent notification, and sends a WhatsApp alert.
+
+This is a per-zone trigger using `for: "00:40:00"` on the state trigger — it will not fire during a normal multi-zone run where each zone runs for less than 40 minutes.
+
 ## Dashboard
 
 The included dashboard YAML uses:
@@ -228,17 +280,57 @@ Install these through HACS before using the dashboard:
 - `custom:bubble-card`
 - `custom:button-card`
 
-The dashboard supports:
+The dashboard includes:
 
-- Hero image
-- Active zone status
-- Last run
-- Next run
-- Rain skip
-- Adjusted runtime
-- Zone controls
-- Runtime per zone
-- Emergency all off
+- Mode-aware hero card (AUTO = green, MANUAL = amber, VACATION = blue, RAIN SKIP = gray)
+- Run All Zones and All Off action buttons
+- Manual Mode toggle (amber when active, shows configured timeout hours)
+- Vacation Mode button (tap = set vacation for configured days, hold = toggle directly)
+- Zone controls (tap = on, hold = off) with today's runtime and 7-day runtime chips
+- Emergency all-off button
+
+## Home Assistant Entities
+
+### input_boolean
+
+| Entity | Purpose |
+|---|---|
+| `input_boolean.sprinkler_rain_skip` | Manual rain skip toggle |
+| `input_boolean.sprinkler_manual_mode` | Manual override mode |
+| `input_boolean.sprinkler_vacation_mode` | Vacation mode |
+
+### input_number
+
+| Entity | Default | Purpose |
+|---|---|---|
+| `input_number.sprinkler_manual_timeout_hours` | 4 | Hours before manual mode auto-expires |
+| `input_number.sprinkler_vacation_days` | 7 | Days to pause when vacation mode is set |
+| `input_number.sprinkler_zone_1_runtime` | 20 | Zone 1 runtime in minutes |
+| `input_number.sprinkler_zone_2_runtime` | 20 | Zone 2 runtime in minutes |
+| `input_number.sprinkler_zone_3_runtime` | 20 | Zone 3 runtime in minutes |
+| `input_number.sprinkler_zone_4_runtime` | 20 | Zone 4 runtime in minutes |
+| `input_number.sprinkler_zone_5_runtime` | 20 | Zone 5 runtime in minutes |
+| `input_number.sprinkler_zone_6_runtime` | 20 | Zone 6 runtime in minutes |
+
+### input_datetime
+
+| Entity | Purpose |
+|---|---|
+| `input_datetime.sprinkler_last_run` | Timestamp of last completed run |
+| `input_datetime.sprinkler_vacation_until` | Date when vacation mode ends |
+
+### Key sensors
+
+| Entity | Purpose |
+|---|---|
+| `sensor.sprinkler_mode` | Current mode: AUTO / MANUAL / VACATION / RAIN SKIP |
+| `sensor.sprinkler_active_zone` | Which zone is currently running, or Idle |
+| `sensor.sprinkler_last_ran` | Human-readable last run timestamp |
+| `sensor.sprinkler_next_run` | Human-readable next scheduled run |
+| `sensor.sprinkler_adjusted_runtime` | Weather-based runtime suggestion (reference only) |
+| `sensor.vacation_countdown` | Days remaining in vacation mode |
+| `sensor.zone_N_runtime_minutes` | Today's runtime for zone N (minutes) |
+| `sensor.zone_N_runtime_this_week_minutes` | 7-day rolling runtime for zone N (minutes) |
 
 ## Wiring Overview
 
@@ -310,6 +402,10 @@ curl http://localhost:5050/
 curl http://<PI_IP_ADDRESS>:5050/
 ```
 
+### 7-day runtime sensors show 0
+
+Check that `recorder: purge_keep_days` in `configuration.yaml` is at least 7. The sensors need recorder history to compute rolling totals.
+
 ## Project Structure
 
 ```text
@@ -328,6 +424,7 @@ diy-smart-sprinkler/
 │   ├── template.yaml
 │   ├── input_boolean.yaml
 │   ├── input_datetime.yaml
+│   ├── input_number.yaml
 │   └── dashboard.yaml
 └── docs/
     ├── wiring.md
