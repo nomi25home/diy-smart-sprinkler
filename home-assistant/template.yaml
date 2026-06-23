@@ -1,13 +1,36 @@
+- sensor:
+    - name: Zone 1 Runtime Minutes
+      state: "{{ (states('sensor.sprinkler_zone_1_runtime_today') | float(0) * 60) | round(0) }}"
+      unit_of_measurement: "min"
+
+    - name: Zone 2 Runtime Minutes
+      state: "{{ (states('sensor.sprinkler_zone_2_runtime_today') | float(0) * 60) | round(0) }}"
+      unit_of_measurement: "min"
+
+    - name: Zone 3 Runtime Minutes
+      state: "{{ (states('sensor.sprinkler_zone_3_runtime_today') | float(0) * 60) | round(0) }}"
+      unit_of_measurement: "min"
+
+    - name: Zone 4 Runtime Minutes
+      state: "{{ (states('sensor.sprinkler_zone_4_runtime_today') | float(0) * 60) | round(0) }}"
+      unit_of_measurement: "min"
+
+    - name: Zone 5 Runtime Minutes
+      state: "{{ (states('sensor.sprinkler_zone_5_runtime_today') | float(0) * 60) | round(0) }}"
+      unit_of_measurement: "min"
+
+    - name: Zone 6 Runtime Minutes
+      state: "{{ (states('sensor.sprinkler_zone_6_runtime_today') | float(0) * 60) | round(0) }}"
+      unit_of_measurement: "min"
+
 - binary_sensor:
     - name: Smart Rain Skip
       state: >
-        {% set forecast = state_attr('weather.home', 'forecast') %}
-        {% set will_rain = forecast and (
-          forecast[0].condition == 'rainy' or
-          forecast[0].precipitation is defined and forecast[0].precipitation > 0.1
-        ) %}
-        {% set current = states('weather.home') == 'rainy' %}
-        {{ current or will_rain }}
+        {{ states('weather.home') in [
+          'rainy',
+          'pouring',
+          'lightning-rainy'
+        ] }}
 
 - sensor:
     - name: Sprinkler Last Ran
@@ -21,6 +44,7 @@
           {{ as_timestamp(t) | timestamp_custom('%a %b %d, %I:%M %p') }}
         {% endif %}
 
+- sensor:
     - name: Sprinkler Next Run
       unique_id: sprinkler_next_run_display
       icon: mdi:calendar-clock
@@ -43,6 +67,7 @@
           {% endif %}
         {% endif %}
 
+- sensor:
     - name: Sprinkler Adjusted Runtime
       unit_of_measurement: "min"
       icon: mdi:timer-cog
@@ -61,43 +86,21 @@
 
         {{ [5, [runtime, 30] | min] | max }}
 
+- sensor:
     - name: Sprinkler Active Zone
-      icon: mdi:sprinkler
       state: >
-        {% set active = namespace(zone='Idle') %}
-        {% for i in range(1, 7) %}
-          {% if is_state('sensor.sprinkler_zone_' ~ i ~ '_state', 'True') or is_state('sensor.sprinkler_zone_' ~ i ~ '_state', 'true') %}
-            {% set active.zone = 'Zone ' ~ i %}
+        {% for i in range(1,7) %}
+          {% if is_state('sensor.sprinkler_zone_' ~ i ~ '_state', 'True') %}
+            Zone {{ i }}
           {% endif %}
         {% endfor %}
-        {{ active.zone }}
-
-    - name: Zone 1 Runtime Minutes
-      unique_id: zone_1_runtime_minutes
-      state: "{{ (states('sensor.sprinkler_zone_1_runtime_today') | float(0) * 60) | round(0) }}"
-      unit_of_measurement: "min"
-
-    - name: Zone 2 Runtime Minutes
-      unique_id: zone_2_runtime_minutes
-      state: "{{ (states('sensor.sprinkler_zone_2_runtime_today') | float(0) * 60) | round(0) }}"
-      unit_of_measurement: "min"
-
-    - name: Zone 3 Runtime Minutes
-      unique_id: zone_3_runtime_minutes
-      state: "{{ (states('sensor.sprinkler_zone_3_runtime_today') | float(0) * 60) | round(0) }}"
-      unit_of_measurement: "min"
-
-    - name: Zone 4 Runtime Minutes
-      unique_id: zone_4_runtime_minutes
-      state: "{{ (states('sensor.sprinkler_zone_4_runtime_today') | float(0) * 60) | round(0) }}"
-      unit_of_measurement: "min"
-
-    - name: Zone 5 Runtime Minutes
-      unique_id: zone_5_runtime_minutes
-      state: "{{ (states('sensor.sprinkler_zone_5_runtime_today') | float(0) * 60) | round(0) }}"
-      unit_of_measurement: "min"
-
-    - name: Zone 6 Runtime Minutes
-      unique_id: zone_6_runtime_minutes
-      state: "{{ (states('sensor.sprinkler_zone_6_runtime_today') | float(0) * 60) | round(0) }}"
-      unit_of_measurement: "min"
+        {% if not (
+          is_state('sensor.sprinkler_zone_1_state','True') or
+          is_state('sensor.sprinkler_zone_2_state','True') or
+          is_state('sensor.sprinkler_zone_3_state','True') or
+          is_state('sensor.sprinkler_zone_4_state','True') or
+          is_state('sensor.sprinkler_zone_5_state','True') or
+          is_state('sensor.sprinkler_zone_6_state','True')
+        ) %}
+          Idle
+        {% endif %}
