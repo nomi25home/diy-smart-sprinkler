@@ -1,57 +1,58 @@
-alias: Run All Sprinkler Zones
-mode: single
-sequence:
-  - condition: state
-    entity_id: input_boolean.sprinkler_rain_skip
-    state: "off"
+sprinkler_run_all_zones:
+  alias: Run All Sprinkler Zones
+  mode: single
+  sequence:
+    - condition: state
+      entity_id: input_boolean.sprinkler_rain_skip
+      state: "off"
 
-  - action: input_datetime.set_datetime
-    target:
-      entity_id: input_datetime.sprinkler_last_run
-    data:
-      datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+    - action: input_datetime.set_datetime
+      target:
+        entity_id: input_datetime.sprinkler_last_run
+      data:
+        datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
 
-  - action: persistent_notification.create
-    data:
-      title: Sprinkler started
-      message: >
-        Sprinkler run started at {{ now().strftime('%I:%M %p') }}.
-        Runtime per zone: {{ states('sensor.sprinkler_adjusted_runtime') }} minutes.
+    - action: persistent_notification.create
+      data:
+        title: Sprinkler started
+        message: >
+          Sprinkler run started at {{ now().strftime('%I:%M %p') }}.
+          Runtime per zone: {{ states('sensor.sprinkler_adjusted_runtime') }} minutes.
 
-  - action: rest_command.sprinkler_zone_1_on
-  - delay:
-      minutes: "{{ states('sensor.sprinkler_adjusted_runtime') | int(20) }}"
-  - action: rest_command.sprinkler_zone_1_off
+    - action: rest_command.sprinkler_zone_1_on
+    - delay:
+        minutes: "{{ states('sensor.sprinkler_adjusted_runtime') | int(20) }}"
+    - action: rest_command.sprinkler_zone_1_off
 
-  - action: rest_command.sprinkler_zone_2_on
-  - delay:
-      minutes: "{{ states('sensor.sprinkler_adjusted_runtime') | int(20) }}"
-  - action: rest_command.sprinkler_zone_2_off
+    - action: rest_command.sprinkler_zone_2_on
+    - delay:
+        minutes: "{{ states('sensor.sprinkler_adjusted_runtime') | int(20) }}"
+    - action: rest_command.sprinkler_zone_2_off
 
-  - action: rest_command.sprinkler_zone_3_on
-  - delay:
-      minutes: "{{ states('sensor.sprinkler_adjusted_runtime') | int(20) }}"
-  - action: rest_command.sprinkler_zone_3_off
+    - action: rest_command.sprinkler_zone_3_on
+    - delay:
+        minutes: "{{ states('sensor.sprinkler_adjusted_runtime') | int(20) }}"
+    - action: rest_command.sprinkler_zone_3_off
 
-  - action: rest_command.sprinkler_zone_4_on
-  - delay:
-      minutes: "{{ states('sensor.sprinkler_adjusted_runtime') | int(20) }}"
-  - action: rest_command.sprinkler_zone_4_off
+    - action: rest_command.sprinkler_zone_4_on
+    - delay:
+        minutes: "{{ states('sensor.sprinkler_adjusted_runtime') | int(20) }}"
+    - action: rest_command.sprinkler_zone_4_off
 
-  - action: rest_command.sprinkler_zone_5_on
-  - delay:
-      minutes: "{{ states('sensor.sprinkler_adjusted_runtime') | int(20) }}"
-  - action: rest_command.sprinkler_zone_5_off
+    - action: rest_command.sprinkler_zone_5_on
+    - delay:
+        minutes: "{{ states('sensor.sprinkler_adjusted_runtime') | int(20) }}"
+    - action: rest_command.sprinkler_zone_5_off
 
-  - action: rest_command.sprinkler_zone_6_on
-  - delay:
-      minutes: "{{ states('sensor.sprinkler_adjusted_runtime') | int(20) }}"
-  - action: rest_command.sprinkler_zone_6_off
+    - action: rest_command.sprinkler_zone_6_on
+    - delay:
+        minutes: "{{ states('sensor.sprinkler_adjusted_runtime') | int(20) }}"
+    - action: rest_command.sprinkler_zone_6_off
 
-  - action: rest_command.sprinkler_all_off
+    - action: rest_command.sprinkler_all_off
 
-  - action: persistent_notification.create
-    data:
-      title: Sprinkler completed
-      message: >
-        Sprinkler run completed at {{ now().strftime('%I:%M %p') }}.
+    - action: persistent_notification.create
+      data:
+        title: Sprinkler completed
+        message: >
+          Sprinkler run completed at {{ now().strftime('%I:%M %p') }}.
