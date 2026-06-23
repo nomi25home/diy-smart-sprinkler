@@ -23,6 +23,30 @@
       state: "{{ (states('sensor.sprinkler_zone_6_runtime_today') | float(0) * 60) | round(0) }}"
       unit_of_measurement: "min"
 
+    - name: Zone 1 Runtime This Week Minutes
+      state: "{{ (states('sensor.sprinkler_zone_1_runtime_this_week') | float(0) * 60) | round(0) }}"
+      unit_of_measurement: "min"
+
+    - name: Zone 2 Runtime This Week Minutes
+      state: "{{ (states('sensor.sprinkler_zone_2_runtime_this_week') | float(0) * 60) | round(0) }}"
+      unit_of_measurement: "min"
+
+    - name: Zone 3 Runtime This Week Minutes
+      state: "{{ (states('sensor.sprinkler_zone_3_runtime_this_week') | float(0) * 60) | round(0) }}"
+      unit_of_measurement: "min"
+
+    - name: Zone 4 Runtime This Week Minutes
+      state: "{{ (states('sensor.sprinkler_zone_4_runtime_this_week') | float(0) * 60) | round(0) }}"
+      unit_of_measurement: "min"
+
+    - name: Zone 5 Runtime This Week Minutes
+      state: "{{ (states('sensor.sprinkler_zone_5_runtime_this_week') | float(0) * 60) | round(0) }}"
+      unit_of_measurement: "min"
+
+    - name: Zone 6 Runtime This Week Minutes
+      state: "{{ (states('sensor.sprinkler_zone_6_runtime_this_week') | float(0) * 60) | round(0) }}"
+      unit_of_measurement: "min"
+
 - binary_sensor:
     - name: Smart Rain Skip
       state: >
@@ -31,6 +55,37 @@
           'pouring',
           'lightning-rainy'
         ] }}
+
+- sensor:
+    - name: Sprinkler Mode
+      icon: mdi:state-machine
+      state: >
+        {% if is_state('input_boolean.sprinkler_manual_mode', 'on') %}
+          MANUAL
+        {% elif is_state('input_boolean.sprinkler_vacation_mode', 'on') %}
+          VACATION
+        {% elif is_state('input_boolean.sprinkler_rain_skip', 'on') or is_state('binary_sensor.smart_rain_skip', 'on') %}
+          RAIN SKIP
+        {% else %}
+          AUTO
+        {% endif %}
+
+    - name: Vacation Countdown
+      icon: mdi:airplane-clock
+      state: >
+        {% if is_state('input_boolean.sprinkler_vacation_mode', 'on') %}
+          {% set vacation_until = as_datetime(states('input_datetime.sprinkler_vacation_until')) %}
+          {% set days_left = (vacation_until.date() - now().date()).days %}
+          {% if days_left <= 0 %}
+            Ending today
+          {% elif days_left == 1 %}
+            1 day left
+          {% else %}
+            {{ days_left }} days left
+          {% endif %}
+        {% else %}
+          Off
+        {% endif %}
 
 - sensor:
     - name: Sprinkler Last Ran
@@ -49,7 +104,11 @@
       unique_id: sprinkler_next_run_display
       icon: mdi:calendar-clock
       state: >
-        {% if is_state('input_boolean.sprinkler_rain_skip', 'on') %}
+        {% if is_state('input_boolean.sprinkler_manual_mode', 'on') %}
+          Paused: Manual Mode
+        {% elif is_state('input_boolean.sprinkler_vacation_mode', 'on') %}
+          Vacation until {{ states('input_datetime.sprinkler_vacation_until') }}
+        {% elif is_state('input_boolean.sprinkler_rain_skip', 'on') %}
           Skipped: Manual Rain Skip
         {% elif is_state('binary_sensor.smart_rain_skip', 'on') %}
           Skipped: Rain Expected
