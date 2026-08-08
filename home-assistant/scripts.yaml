@@ -38,35 +38,101 @@ sprinkler_run_all_zones:
           Z5={{ states('input_number.sprinkler_zone_5_runtime') | int }}m,
           Z6={{ states('input_number.sprinkler_zone_6_runtime') | int }}m.
 
+    - action: input_number.set_value
+      target:
+        entity_id: input_number.sprinkler_current_zone
+      data:
+        value: 1
+    - action: input_datetime.set_datetime
+      target:
+        entity_id: input_datetime.sprinkler_zone_start_time
+      data:
+        datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
     - action: rest_command.sprinkler_zone_1_on
     - delay:
         minutes: "{{ states('input_number.sprinkler_zone_1_runtime') | int(20) }}"
     - action: rest_command.sprinkler_zone_1_off
 
+    - action: input_number.set_value
+      target:
+        entity_id: input_number.sprinkler_current_zone
+      data:
+        value: 2
+    - action: input_datetime.set_datetime
+      target:
+        entity_id: input_datetime.sprinkler_zone_start_time
+      data:
+        datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
     - action: rest_command.sprinkler_zone_2_on
     - delay:
         minutes: "{{ states('input_number.sprinkler_zone_2_runtime') | int(20) }}"
     - action: rest_command.sprinkler_zone_2_off
 
+    - action: input_number.set_value
+      target:
+        entity_id: input_number.sprinkler_current_zone
+      data:
+        value: 3
+    - action: input_datetime.set_datetime
+      target:
+        entity_id: input_datetime.sprinkler_zone_start_time
+      data:
+        datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
     - action: rest_command.sprinkler_zone_3_on
     - delay:
         minutes: "{{ states('input_number.sprinkler_zone_3_runtime') | int(20) }}"
     - action: rest_command.sprinkler_zone_3_off
 
+    - action: input_number.set_value
+      target:
+        entity_id: input_number.sprinkler_current_zone
+      data:
+        value: 4
+    - action: input_datetime.set_datetime
+      target:
+        entity_id: input_datetime.sprinkler_zone_start_time
+      data:
+        datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
     - action: rest_command.sprinkler_zone_4_on
     - delay:
         minutes: "{{ states('input_number.sprinkler_zone_4_runtime') | int(20) }}"
     - action: rest_command.sprinkler_zone_4_off
 
+    - action: input_number.set_value
+      target:
+        entity_id: input_number.sprinkler_current_zone
+      data:
+        value: 5
+    - action: input_datetime.set_datetime
+      target:
+        entity_id: input_datetime.sprinkler_zone_start_time
+      data:
+        datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
     - action: rest_command.sprinkler_zone_5_on
     - delay:
         minutes: "{{ states('input_number.sprinkler_zone_5_runtime') | int(20) }}"
     - action: rest_command.sprinkler_zone_5_off
 
+    - action: input_number.set_value
+      target:
+        entity_id: input_number.sprinkler_current_zone
+      data:
+        value: 6
+    - action: input_datetime.set_datetime
+      target:
+        entity_id: input_datetime.sprinkler_zone_start_time
+      data:
+        datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
     - action: rest_command.sprinkler_zone_6_on
     - delay:
         minutes: "{{ states('input_number.sprinkler_zone_6_runtime') | int(20) }}"
     - action: rest_command.sprinkler_zone_6_off
+
+    - action: input_number.set_value
+      target:
+        entity_id: input_number.sprinkler_current_zone
+      data:
+        value: 0
 
     - action: rest_command.sprinkler_all_off
 
@@ -95,6 +161,229 @@ sprinkler_run_all_zones:
              states('input_number.sprinkler_zone_4_runtime') | int(20) +
              states('input_number.sprinkler_zone_5_runtime') | int(20) +
              states('input_number.sprinkler_zone_6_runtime') | int(20) }} minutes.
+
+
+sprinkler_stop_all:
+  alias: Stop All Sprinkler Zones
+  mode: single
+  sequence:
+    # Kill any running HA scripts so pending delays won't re-activate zones
+    - action: script.turn_off
+      target:
+        entity_id: script.sprinkler_run_all_zones
+    - action: script.turn_off
+      target:
+        entity_id: script.sprinkler_resume_run
+    # Shut off all valves on the Pi
+    - action: rest_command.sprinkler_all_off
+    - action: input_number.set_value
+      target:
+        entity_id: input_number.sprinkler_current_zone
+      data:
+        value: 0
+    - action: persistent_notification.create
+      data:
+        title: Sprinkler Stopped
+        message: "All zones stopped at {{ now().strftime('%I:%M %p') }}."
+    - action: script.whatsapp_me
+      continue_on_error: true
+      data:
+        message: "All sprinkler zones stopped at {{ now().strftime('%I:%M %p') }}."
+
+
+sprinkler_resume_run:
+  alias: Resume Sprinkler Run After Restart
+  mode: single
+  fields:
+    start_zone:
+      description: Zone number to resume from (1-6)
+      selector:
+        number:
+          min: 1
+          max: 6
+          mode: box
+      default: 1
+    remaining_minutes:
+      description: >
+        Remaining minutes for the start zone.
+        Pass 0 to skip the start zone and begin from the next one.
+      selector:
+        number:
+          min: 0
+          max: 60
+      default: 0
+  sequence:
+    - action: rest_command.sprinkler_all_off
+
+    - action: persistent_notification.create
+      data:
+        title: Sprinkler Resumed
+        message: >
+          Sprinkler resuming from Zone {{ start_zone }} at {{ now().strftime('%I:%M %p') }}.
+          {% if remaining_minutes | int > 0 %}
+          Remaining time for Zone {{ start_zone }}: {{ remaining_minutes }} min.
+          {% else %}
+          Zone {{ start_zone }} already elapsed — starting next zone.
+          {% endif %}
+
+    - action: script.whatsapp_me
+      continue_on_error: true
+      data:
+        message: >
+          HA restarted mid-sprinkler run. Resuming from Zone {{ start_zone }}
+          ({{ remaining_minutes }} min remaining). {{ now().strftime('%I:%M %p') }}
+
+    # Zone 1 — only when resuming mid-zone-1 with time still remaining
+    - if: "{{ start_zone | int == 1 and remaining_minutes | int > 0 }}"
+      then:
+        - action: input_number.set_value
+          target:
+            entity_id: input_number.sprinkler_current_zone
+          data:
+            value: 1
+        - action: input_datetime.set_datetime
+          target:
+            entity_id: input_datetime.sprinkler_zone_start_time
+          data:
+            datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+        - action: rest_command.sprinkler_zone_1_on
+        - delay:
+            minutes: "{{ remaining_minutes | int }}"
+        - action: rest_command.sprinkler_zone_1_off
+
+    # Zone 2 — skip if restart was mid-zone-2 and remaining_minutes is 0
+    - if: "{{ start_zone | int < 2 or (start_zone | int == 2 and remaining_minutes | int > 0) }}"
+      then:
+        - action: input_number.set_value
+          target:
+            entity_id: input_number.sprinkler_current_zone
+          data:
+            value: 2
+        - action: input_datetime.set_datetime
+          target:
+            entity_id: input_datetime.sprinkler_zone_start_time
+          data:
+            datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+        - action: rest_command.sprinkler_zone_2_on
+        - delay:
+            minutes: >
+              {% if start_zone | int == 2 and remaining_minutes | int > 0 %}
+                {{ remaining_minutes | int }}
+              {% else %}
+                {{ states('input_number.sprinkler_zone_2_runtime') | int(20) }}
+              {% endif %}
+        - action: rest_command.sprinkler_zone_2_off
+
+    # Zone 3
+    - if: "{{ start_zone | int < 3 or (start_zone | int == 3 and remaining_minutes | int > 0) }}"
+      then:
+        - action: input_number.set_value
+          target:
+            entity_id: input_number.sprinkler_current_zone
+          data:
+            value: 3
+        - action: input_datetime.set_datetime
+          target:
+            entity_id: input_datetime.sprinkler_zone_start_time
+          data:
+            datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+        - action: rest_command.sprinkler_zone_3_on
+        - delay:
+            minutes: >
+              {% if start_zone | int == 3 and remaining_minutes | int > 0 %}
+                {{ remaining_minutes | int }}
+              {% else %}
+                {{ states('input_number.sprinkler_zone_3_runtime') | int(20) }}
+              {% endif %}
+        - action: rest_command.sprinkler_zone_3_off
+
+    # Zone 4
+    - if: "{{ start_zone | int < 4 or (start_zone | int == 4 and remaining_minutes | int > 0) }}"
+      then:
+        - action: input_number.set_value
+          target:
+            entity_id: input_number.sprinkler_current_zone
+          data:
+            value: 4
+        - action: input_datetime.set_datetime
+          target:
+            entity_id: input_datetime.sprinkler_zone_start_time
+          data:
+            datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+        - action: rest_command.sprinkler_zone_4_on
+        - delay:
+            minutes: >
+              {% if start_zone | int == 4 and remaining_minutes | int > 0 %}
+                {{ remaining_minutes | int }}
+              {% else %}
+                {{ states('input_number.sprinkler_zone_4_runtime') | int(20) }}
+              {% endif %}
+        - action: rest_command.sprinkler_zone_4_off
+
+    # Zone 5
+    - if: "{{ start_zone | int < 5 or (start_zone | int == 5 and remaining_minutes | int > 0) }}"
+      then:
+        - action: input_number.set_value
+          target:
+            entity_id: input_number.sprinkler_current_zone
+          data:
+            value: 5
+        - action: input_datetime.set_datetime
+          target:
+            entity_id: input_datetime.sprinkler_zone_start_time
+          data:
+            datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+        - action: rest_command.sprinkler_zone_5_on
+        - delay:
+            minutes: >
+              {% if start_zone | int == 5 and remaining_minutes | int > 0 %}
+                {{ remaining_minutes | int }}
+              {% else %}
+                {{ states('input_number.sprinkler_zone_5_runtime') | int(20) }}
+              {% endif %}
+        - action: rest_command.sprinkler_zone_5_off
+
+    # Zone 6
+    - if: "{{ start_zone | int < 6 or (start_zone | int == 6 and remaining_minutes | int > 0) }}"
+      then:
+        - action: input_number.set_value
+          target:
+            entity_id: input_number.sprinkler_current_zone
+          data:
+            value: 6
+        - action: input_datetime.set_datetime
+          target:
+            entity_id: input_datetime.sprinkler_zone_start_time
+          data:
+            datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+        - action: rest_command.sprinkler_zone_6_on
+        - delay:
+            minutes: >
+              {% if start_zone | int == 6 and remaining_minutes | int > 0 %}
+                {{ remaining_minutes | int }}
+              {% else %}
+                {{ states('input_number.sprinkler_zone_6_runtime') | int(20) }}
+              {% endif %}
+        - action: rest_command.sprinkler_zone_6_off
+
+    - action: input_number.set_value
+      target:
+        entity_id: input_number.sprinkler_current_zone
+      data:
+        value: 0
+
+    - action: rest_command.sprinkler_all_off
+
+    - action: persistent_notification.create
+      data:
+        title: Sprinkler Completed
+        message: "Resumed sprinkler run completed at {{ now().strftime('%I:%M %p') }}."
+
+    - action: script.whatsapp_me
+      continue_on_error: true
+      data:
+        message: "Resumed sprinkler run completed at {{ now().strftime('%I:%M %p') }}."
+
 
 sprinkler_set_vacation:
   alias: Set Vacation Mode

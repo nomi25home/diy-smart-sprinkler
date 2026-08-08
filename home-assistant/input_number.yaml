@@ -69,3 +69,11 @@ sprinkler_zone_6_runtime:
   step: 1
   initial: 20
   unit_of_measurement: min
+
+sprinkler_current_zone:
+  name: Sprinkler Current Zone
+  icon: mdi:counter
+  min: 0
+  max: 6
+  step: 1
+  initial: 0

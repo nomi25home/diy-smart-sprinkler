@@ -179,7 +179,7 @@ cards:
           }
         tap_action:
           action: call-service
-          service: rest_command.sprinkler_all_off
+          service: script.sprinkler_stop_all
   - type: custom:bubble-card
     card_type: separator
     sub_button:

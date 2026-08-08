@@ -182,3 +182,34 @@
           Rain detected ({{ states('weather.home') }}).
         {% endif %}
   mode: single
+
+- id: 'sprinkler_resume_on_ha_restart'
+  alias: Sprinkler Resume After HA Restart
+  description: >
+    When HA restarts mid-run, sprinkler_current_zone is non-zero.
+    This automation detects that, calculates remaining time for the
+    interrupted zone, and calls sprinkler_resume_run to finish the cycle.
+  trigger:
+  - platform: homeassistant
+    event: start
+  condition:
+  - condition: template
+    value_template: >
+      {{ states('input_number.sprinkler_current_zone') | int(0) in [1,2,3,4,5,6] }}
+  action:
+  # Give HA a moment to fully settle before issuing REST commands
+  - delay:
+      seconds: 30
+  - variables:
+      current_zone: "{{ states('input_number.sprinkler_current_zone') | int }}"
+      zone_runtime: >
+        {{ states('input_number.sprinkler_zone_' ~ states('input_number.sprinkler_current_zone') | int ~ '_runtime') | int(20) }}
+      elapsed_minutes: >
+        {{ ((as_timestamp(now()) - as_timestamp(states('input_datetime.sprinkler_zone_start_time'))) / 60) | int(0) }}
+      remaining_minutes: >
+        {{ [zone_runtime - elapsed_minutes, 0] | max }}
+  - action: script.sprinkler_resume_run
+    data:
+      start_zone: "{{ current_zone }}"
+      remaining_minutes: "{{ remaining_minutes }}"
+  mode: single

@@ -7,3 +7,8 @@ sprinkler_vacation_until:
   name: Sprinkler Vacation Until
   has_date: true
   has_time: false
+
+sprinkler_zone_start_time:
+  name: Sprinkler Zone Start Time
+  has_date: true
+  has_time: true
