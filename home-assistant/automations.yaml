@@ -165,6 +165,9 @@
     - condition: state
       entity_id: input_boolean.sprinkler_vacation_mode
       state: 'on'
+    - condition: state
+      entity_id: input_boolean.sprinkler_winterized
+      state: 'on'
   action:
   - action: script.whatsapp_me
     continue_on_error: true
@@ -172,7 +175,9 @@
       message: >
         Sprinkler schedule skipped at {{ now().strftime('%I:%M %p') }}.
         Reason:
-        {% if is_state('input_boolean.sprinkler_manual_mode', 'on') %}
+        {% if is_state('input_boolean.sprinkler_winterized', 'on') %}
+          System winterized — irrigation disabled for winter.
+        {% elif is_state('input_boolean.sprinkler_manual_mode', 'on') %}
           Manual mode active.
         {% elif is_state('input_boolean.sprinkler_vacation_mode', 'on') %}
           Vacation mode active until {{ states('input_datetime.sprinkler_vacation_until') }}.

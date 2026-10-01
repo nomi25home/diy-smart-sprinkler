@@ -3,6 +3,10 @@ sprinkler_run_all_zones:
   mode: single
   sequence:
     - condition: state
+      entity_id: input_boolean.sprinkler_winterized
+      state: "off"
+
+    - condition: state
       entity_id: input_boolean.sprinkler_rain_skip
       state: "off"
 
@@ -161,6 +165,35 @@ sprinkler_run_all_zones:
              states('input_number.sprinkler_zone_4_runtime') | int(20) +
              states('input_number.sprinkler_zone_5_runtime') | int(20) +
              states('input_number.sprinkler_zone_6_runtime') | int(20) }} minutes.
+
+
+sprinkler_winterize:
+  alias: Winterize Sprinkler System
+  mode: single
+  sequence:
+    - action: script.turn_off
+      target:
+        entity_id: script.sprinkler_run_all_zones
+    - action: script.turn_off
+      target:
+        entity_id: script.sprinkler_resume_run
+    - action: rest_command.sprinkler_all_off
+    - action: input_number.set_value
+      target:
+        entity_id: input_number.sprinkler_current_zone
+      data:
+        value: 0
+    - action: input_boolean.turn_on
+      target:
+        entity_id: input_boolean.sprinkler_winterized
+    - action: persistent_notification.create
+      data:
+        title: Sprinkler Winterized
+        message: "System winterized at {{ now().strftime('%I:%M %p') }}. Irrigation disabled until spring."
+    - action: script.whatsapp_me
+      continue_on_error: true
+      data:
+        message: "Sprinkler system winterized at {{ now().strftime('%I:%M %p') }}. Irrigation disabled until spring."
 
 
 sprinkler_stop_all:

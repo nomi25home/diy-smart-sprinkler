@@ -9,3 +9,7 @@ sprinkler_manual_mode:
 sprinkler_vacation_mode:
   name: Sprinkler Vacation Mode
   icon: mdi:airplane
+
+sprinkler_winterized:
+  name: Sprinkler Winterized
+  icon: mdi:snowflake

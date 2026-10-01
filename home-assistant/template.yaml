@@ -60,7 +60,9 @@
     - name: Sprinkler Mode
       icon: mdi:state-machine
       state: >
-        {% if is_state('input_boolean.sprinkler_manual_mode', 'on') %}
+        {% if is_state('input_boolean.sprinkler_winterized', 'on') %}
+          WINTERIZED
+        {% elif is_state('input_boolean.sprinkler_manual_mode', 'on') %}
           MANUAL
         {% elif is_state('input_boolean.sprinkler_vacation_mode', 'on') %}
           VACATION
