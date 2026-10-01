@@ -2,6 +2,8 @@
 
 Build a homelab webapp for controlling and monitoring a 6-zone DIY sprinkler system. The webapp has **independent, direct communication with the Raspberry Pi relay controller** — it does not route zone commands through Home Assistant. HA and the webapp are two independent clients of the same Pi API; they coexist without interfering.
 
+> **Status:** built and deployed. Code and README: [nomi25home/sprinkler-webapp](https://github.com/nomi25home/sprinkler-webapp). This prompt is kept for reference.
+
 ---
 
 ## Architecture

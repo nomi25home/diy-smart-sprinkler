@@ -4,6 +4,8 @@ A Raspberry Pi + Home Assistant DIY irrigation controller using GPIO-controlled 
 
 This project turns a Raspberry Pi 2 running Raspberry Pi OS Bookworm into a local sprinkler controller for a 6-zone irrigation system using a SainSmart 16-channel 12V relay board.
 
+> **Web app:** a mobile-first control UI that talks directly to the Pi API (HA only for mode helpers) lives in its own private repo, [nomi25home/sprinkler-webapp](https://github.com/nomi25home/sprinkler-webapp). Checked out locally at `webapp/` (not tracked by this repo).
+
 ## Features
 
 - Raspberry Pi GPIO control
