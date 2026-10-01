@@ -22,7 +22,8 @@ This project turns a Raspberry Pi 2 running Raspberry Pi OS Bookworm into a loca
 - Rain skip toggle (manual and automatic weather-based)
 - Weather-adjusted runtime reference sensor
 - Last run / next run display
-- Mode indicator: AUTO / MANUAL / VACATION / RAIN SKIP
+- Mode indicator: AUTO / MANUAL / VACATION / RAIN SKIP / WINTERIZED
+- **Winterization mode** — disables all irrigation for the off-season with a single tap; survives HA restarts
 - Safety shutoff: any zone running >40 minutes is automatically cut off
 
 ## Screenshots
@@ -258,6 +259,25 @@ Call `script.sprinkler_set_vacation` to enable vacation mode. It reads `input_nu
 
 `input_boolean.sprinkler_rain_skip` can be toggled manually or is set automatically by the `Enable Rain Skip When Raining` automation when `weather.home` reports rainy/pouring/lightning-rainy. It resets automatically at 3:00 AM daily.
 
+### WINTERIZED
+
+Call `script.sprinkler_winterize` (or tap the Winterize button on the dashboard) to enable winterization mode. This is intended for use after a landscaper performs a physical blow-out of the system at the end of the season. The script:
+
+1. Stops any active `sprinkler_run_all_zones` or `sprinkler_resume_run` scripts
+2. Sends `rest_command.sprinkler_all_off` to close all valves on the Pi
+3. Resets `input_number.sprinkler_current_zone` to 0
+4. Turns on `input_boolean.sprinkler_winterized`
+5. Creates a persistent HA notification and sends a WhatsApp alert
+
+While winterized:
+- All scheduled runs (5:30 AM / 5:30 PM) are blocked — `sprinkler_run_all_zones` checks the boolean as its first condition
+- `sensor.sprinkler_mode` shows WINTERIZED (highest priority, above MANUAL)
+- The skip-notification automation sends a "System winterized" reason instead of the usual skip reasons
+
+To un-winterize in spring, hold the Winterize button on the dashboard (or turn off `input_boolean.sprinkler_winterized` directly). Then bring up zones one-by-one using the individual zone buttons for the landscaper's spring startup check.
+
+`input_boolean.sprinkler_winterized` is created as a UI helper with no `initial` value so the winterized state persists across HA restarts.
+
 ## Per-Zone Runtime
 
 Each zone has a configurable runtime via `input_number.sprinkler_zone_N_runtime` (5–60 min, default 20). These values are used directly by `script.sprinkler_run_all_zones` and replace the weather-adjusted runtime for scheduling purposes. The `Sprinkler Adjusted Runtime` sensor still displays a weather-based suggestion as a reference.
@@ -282,10 +302,11 @@ Install these through HACS before using the dashboard:
 
 The dashboard includes:
 
-- Mode-aware hero card (AUTO = green, MANUAL = amber, VACATION = blue, RAIN SKIP = gray)
+- Mode-aware hero card (AUTO = green, MANUAL = amber, VACATION = blue, RAIN SKIP = gray, WINTERIZED = steel-blue)
 - Run All Zones and All Off action buttons
 - Manual Mode toggle (amber when active, shows configured timeout hours)
 - Vacation Mode button (tap = set vacation for configured days, hold = toggle directly)
+- **Winterize button** (steel-blue when active; tap = winterize, hold = un-winterize)
 - Zone controls (tap = on, hold = off) with today's runtime and 7-day runtime chips
 - Emergency all-off button
 
@@ -298,6 +319,7 @@ The dashboard includes:
 | `input_boolean.sprinkler_rain_skip` | Manual rain skip toggle |
 | `input_boolean.sprinkler_manual_mode` | Manual override mode |
 | `input_boolean.sprinkler_vacation_mode` | Vacation mode |
+| `input_boolean.sprinkler_winterized` | Winterization mode (disables all irrigation) |
 
 ### input_number
 
@@ -323,7 +345,7 @@ The dashboard includes:
 
 | Entity | Purpose |
 |---|---|
-| `sensor.sprinkler_mode` | Current mode: AUTO / MANUAL / VACATION / RAIN SKIP |
+| `sensor.sprinkler_mode` | Current mode: AUTO / MANUAL / VACATION / RAIN SKIP / WINTERIZED |
 | `sensor.sprinkler_active_zone` | Which zone is currently running, or Idle |
 | `sensor.sprinkler_last_ran` | Human-readable last run timestamp |
 | `sensor.sprinkler_next_run` | Human-readable next scheduled run |
