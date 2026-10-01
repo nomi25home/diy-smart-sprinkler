@@ -3,6 +3,10 @@ sprinkler_run_all_zones:
   mode: single
   sequence:
     - condition: state
+      entity_id: input_boolean.sprinkler_webapp_running
+      state: "off"
+
+    - condition: state
       entity_id: input_boolean.sprinkler_winterized
       state: "off"
 

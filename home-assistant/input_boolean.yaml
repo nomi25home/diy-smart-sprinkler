@@ -13,3 +13,7 @@ sprinkler_vacation_mode:
 sprinkler_winterized:
   name: Sprinkler Winterized
   icon: mdi:snowflake
+
+sprinkler_webapp_running:
+  name: Sprinkler Webapp Running
+  icon: mdi:web
